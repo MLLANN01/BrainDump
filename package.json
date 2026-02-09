@@ -1,0 +1,129 @@
+{
+  "name": "braindump",
+  "displayName": "BrainDump",
+  "description": "AI-powered workspace organization. Dump your thoughts, press a button, and let AI organize them into files and action items.",
+  "version": "0.2.0",
+  "publisher": "MLLANN01",
+  "author": "MLLANN01",
+  "license": "ISC",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MLLANN01/BrainDump"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "braindump",
+    "ai",
+    "organization",
+    "workspace",
+    "copilot"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "braindump.process",
+        "title": "BrainDump: Process Brain Dump",
+        "icon": {
+          "light": "media/brain-light.svg",
+          "dark": "media/brain-dark.svg"
+        }
+      },
+      {
+        "command": "braindump.undo",
+        "title": "BrainDump: Undo Last Operation"
+      },
+      {
+        "command": "braindump.selectModel",
+        "title": "BrainDump: Select Model"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "braindump.process",
+          "group": "navigation",
+          "when": "resourceFilename =~ /braindump/i"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "BrainDump",
+      "properties": {
+        "braindump.inputFile": {
+          "type": "string",
+          "default": "braindump.txt",
+          "description": "Path to the brain dump input file, relative to workspace root"
+        },
+        "braindump.postProcess": {
+          "type": "string",
+          "enum": [
+            "clear",
+            "keep",
+            "archive"
+          ],
+          "default": "clear",
+          "description": "What to do with the brain dump file after processing. 'archive' saves a copy to the history directory before clearing."
+        },
+        "braindump.ai.backend": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "vscode-lm"
+          ],
+          "default": "auto",
+          "description": "AI backend to use. 'auto' detects the best available model from Copilot, BYOK, or any registered LM provider."
+        },
+        "braindump.ai.model": {
+          "type": "string",
+          "default": "",
+          "description": "Preferred model ID. Run 'BrainDump: Select Model' to pick from available models. Leave empty for auto-detection."
+        },
+        "braindump.fileTree.maxDepth": {
+          "type": "number",
+          "default": 4,
+          "description": "Maximum directory depth for the workspace file tree sent to the AI"
+        },
+        "braindump.history.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically archive each brain dump before processing"
+        },
+        "braindump.history.directory": {
+          "type": "string",
+          "default": ".braindump-history",
+          "description": "Directory to store brain dump archives, relative to workspace root"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "pretest": "npm run build",
+    "test": "node ./dist/test/runTest.js",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.95.0",
+    "@vscode/test-electron": "^2.3.8",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.24.0",
+    "mocha": "^10.2.0",
+    "typescript": "^5.5.0"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.1"
+  }
+}

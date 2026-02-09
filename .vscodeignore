@@ -1,0 +1,16 @@
+.vscode/**
+.vscode-test/**
+src/**
+test/**
+testing/**
+node_modules/**
+dist/src/**
+dist/**/*.map
+.gitignore
+.DS_Store
+esbuild.js
+tsconfig.json
+PROJECT_ANALYSIS.md
+CLAUDE.md
+media/recording.mp4
+*.vsix
