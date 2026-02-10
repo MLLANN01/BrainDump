@@ -5,7 +5,7 @@ export type StreamCallback = (chunk: string) => void;
 
 export interface AIBackend {
   readonly name: string;
-  process(request: BrainDumpRequest, token: vscode.CancellationToken, onChunk?: StreamCallback): Promise<BrainDumpPlan>;
+  process(request: BrainDumpRequest, token: vscode.CancellationToken, onChunk?: StreamCallback): Promise<BrainDumpContext>;
   clarify?(request: BrainDumpRequest, token: vscode.CancellationToken, onChunk?: StreamCallback): Promise<ClarificationResult>;
 }
 
@@ -22,26 +22,8 @@ export interface ClarificationResult {
   suggestions: SuggestionNote[];
 }
 
-export interface BrainDumpPlan {
-  summary: string;
-  fileOperations: FileOperation[];
-  actionItems: ActionItem[];
-  suggestions?: SuggestionNote[];
-}
-
-export interface FileOperation {
-  action: 'create' | 'append' | 'edit';
-  filePath: string;
-  description: string;
-  content: string;
-  searchBlock?: string; // Required for 'edit' — the text to find and replace
-}
-
-export interface ActionItem {
-  description: string;
-  priority?: 'high' | 'medium' | 'low';
-  relatedFiles?: string[];
-  targetFile?: string;
+export interface BrainDumpContext {
+  markdownContent: string;
 }
 
 export interface ClarificationQuestion {

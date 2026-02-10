@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { AIBackend, BrainDumpRequest, BrainDumpPlan, ClarificationResult, StreamCallback } from './types.js';
-import { buildPrompt, buildIntentPrompt, buildClarificationPrompt } from '../processing/prompt.js';
-import { parseResponse, parseIntentResponse, parseClarificationResponse } from '../processing/parser.js';
+import { AIBackend, BrainDumpRequest, BrainDumpContext, ClarificationResult, StreamCallback } from './types.js';
+import { buildContextPrompt, buildIntentPrompt, buildClarificationPrompt } from '../processing/prompt.js';
+import { parseContextResponse, parseIntentResponse, parseClarificationResponse } from '../processing/parser.js';
 import { DEFAULT_PROMPT_CONFIG } from '../config/prompt-defaults.js';
 
 export class VSCodeLMBackend implements AIBackend {
@@ -17,14 +17,14 @@ export class VSCodeLMBackend implements AIBackend {
     request: BrainDumpRequest,
     token: vscode.CancellationToken,
     onChunk?: StreamCallback,
-  ): Promise<BrainDumpPlan> {
+  ): Promise<BrainDumpContext> {
     const promptConfig = request.promptConfig ?? DEFAULT_PROMPT_CONFIG;
 
-    // Two-pass: first determine which files need to be read for edits
+    // Two-pass: first determine which files need to be read for context
     const fileContents = await this.intentPass(request, token);
 
     // Build the full prompt with file contents (if any)
-    const promptText = buildPrompt(request, promptConfig, fileContents);
+    const promptText = buildContextPrompt(request, promptConfig, fileContents);
     const messages = [
       vscode.LanguageModelChatMessage.User(promptText),
     ];
@@ -39,7 +39,7 @@ export class VSCodeLMBackend implements AIBackend {
       }
     }
 
-    return parseResponse(responseText);
+    return parseContextResponse(responseText);
   }
 
   async clarify(

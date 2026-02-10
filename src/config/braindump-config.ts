@@ -15,6 +15,12 @@ interface ProjectYaml {
       instructions?: string;
       maxQuestions?: number;
     };
+    context?: {
+      systemRole?: string;
+      instructions?: string;
+      outputRules?: string;
+    };
+    // Backward compatibility: accept "plan" as alias for "context"
     plan?: {
       systemRole?: string;
       instructions?: string;
@@ -67,17 +73,22 @@ export async function readProjectConfig(workspaceRoot: vscode.Uri): Promise<Proj
         };
       }
 
-      if (p.plan && typeof p.plan === 'object') {
-        partial.plan = {
-          systemRole: typeof p.plan.systemRole === 'string'
-            ? p.plan.systemRole
-            : DEFAULT_PROMPT_CONFIG.plan.systemRole,
-          instructions: typeof p.plan.instructions === 'string'
-            ? p.plan.instructions
-            : DEFAULT_PROMPT_CONFIG.plan.instructions,
-          outputRules: typeof p.plan.outputRules === 'string'
-            ? p.plan.outputRules
-            : DEFAULT_PROMPT_CONFIG.plan.outputRules,
+      // Accept both "context" and "plan" keys (backward compat)
+      const contextSource = (p.context && typeof p.context === 'object') ? p.context
+        : (p.plan && typeof p.plan === 'object') ? p.plan
+        : undefined;
+
+      if (contextSource) {
+        partial.context = {
+          systemRole: typeof contextSource.systemRole === 'string'
+            ? contextSource.systemRole
+            : DEFAULT_PROMPT_CONFIG.context.systemRole,
+          instructions: typeof contextSource.instructions === 'string'
+            ? contextSource.instructions
+            : DEFAULT_PROMPT_CONFIG.context.instructions,
+          outputRules: typeof contextSource.outputRules === 'string'
+            ? contextSource.outputRules
+            : DEFAULT_PROMPT_CONFIG.context.outputRules,
         };
       }
 
@@ -92,7 +103,7 @@ export async function readProjectConfig(workspaceRoot: vscode.Uri): Promise<Proj
       if (Object.keys(partial).length > 0) {
         prompts = {
           clarification: partial.clarification ?? DEFAULT_PROMPT_CONFIG.clarification,
-          plan: partial.plan ?? DEFAULT_PROMPT_CONFIG.plan,
+          context: partial.context ?? DEFAULT_PROMPT_CONFIG.context,
           intent: partial.intent ?? DEFAULT_PROMPT_CONFIG.intent,
         };
       }

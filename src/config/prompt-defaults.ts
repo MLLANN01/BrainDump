@@ -4,7 +4,7 @@ export interface PromptConfig {
     instructions: string;
     maxQuestions: number;
   };
-  plan: {
+  context: {
     systemRole: string;
     instructions: string;
     outputRules: string;
@@ -28,39 +28,29 @@ You receive raw, unstructured text from a developer's "brain dump". Your ONLY ta
 If the brain dump is clear enough to process without clarification, return empty arrays.`,
     maxQuestions: 5,
   },
-  plan: {
-    systemRole: `You are a workspace organization agent for the BrainDump VS Code extension.
+  context: {
+    systemRole: `You are a context synthesis agent for the BrainDump VS Code extension.
 
-You receive raw, unstructured text from a developer's "brain dump" and produce a structured JSON plan to organize that content into their codebase.`,
-    instructions: `1. Parse the brain dump into distinct topics or instructions. People ramble and switch topics mid-sentence -- segment them.
-2. For each topic, determine the action:
-   - "create": A new file needs to be created. Provide the full file content.
-   - "append": Content should be added to an existing file (e.g., adding to a TODO list, changelog, or config). Provide the text to append.
-   - "edit": An existing file needs specific text replaced. Provide the exact text to find (searchBlock) and the replacement (content). The searchBlock must be an exact substring of the current file contents.
-   - Action item: Something to do later (TODO, reminder, deadline-driven task). Extract it separately.
-3. Use the workspace context and file tree to determine correct file paths. Follow the project's naming conventions and directory structure.
-4. If a file reference is ambiguous or the file doesn't exist in the tree, prefer creating a new file rather than risking a bad edit.
-5. For "edit" operations, the searchBlock must be a unique, exact substring of the target file. Include enough surrounding context to make it unique. The content field is the replacement text.
-6. Extract action items from phrases like "TODO", "need to", "don't forget", "remind me", "before [deadline]". Infer priority from urgency language.
-7. Determine the targetFile for each action item based on workspace context and file tree. When the brain dump is clearly about a specific project (e.g., references a project name, directory, or files within a project), route its action items to that project's TODO file (e.g., "Projects/MyProject/TODO.md"). Items without targetFile default to TODO.md at the workspace root.
-8. Handle corrections ("actually, scratch that", "no wait, put it in...") by using the corrected version, not the original.
-9. For "append" operations on files with section headings, specify where the content should go.`,
-    outputRules: `- Do NOT include clarification questions in your response. Produce your best plan with the information available.
-- filePath must be relative to the workspace root, using forward slashes
-- For "create", content is the FULL file content
-- For "append", content is ONLY the text to add
-- For "edit", content is the REPLACEMENT text and searchBlock is the EXACT text to find
-- searchBlock is REQUIRED for "edit" operations and MUST NOT be present for "create"/"append"
-- action can ONLY be "create", "append", or "edit"
-- priority can ONLY be "high", "medium", or "low"
-- If there are no file operations, use an empty array
-- If there are no action items, use an empty array
-- "suggestions" is OPTIONAL. Use it to surface interpretations you made, recommendations, or warnings. Types: "interpretation" (explain how you interpreted something ambiguous), "recommendation" (suggest a better approach), "warning" (flag a potential issue).
-- "targetFile" in actionItems is OPTIONAL. When present, it must be a workspace-relative path using forward slashes (e.g., "Projects/MyProject/TODO.md"). Items without targetFile go to TODO.md at the workspace root.`,
+You receive raw, unstructured text from a developer's "brain dump" and produce a structured Markdown context document. This document will be handed to an AI coding agent (Copilot, Claude, etc.) as a brief — it must be self-contained, clear, and actionable.`,
+    instructions: `1. Parse the brain dump into distinct topics or instructions. People ramble and switch topics mid-sentence — segment them.
+2. Write a clear summary of what the developer wants to accomplish.
+3. For each topic, provide context: what needs to happen, which files are relevant, and any constraints or decisions mentioned.
+4. Include relevant code excerpts with file paths when existing file contents are provided — these help the AI agent understand the current state.
+5. Incorporate clarification answers naturally into the document (don't present them as Q&A).
+6. Extract remaining TODOs, open questions, or decisions that still need to be made into a dedicated section.
+7. Handle corrections ("actually, scratch that", "no wait, put it in...") by using the corrected version, not the original.
+8. Use the workspace file tree and context to ground file references in actual paths.`,
+    outputRules: `- Output raw Markdown only. Do NOT wrap the output in a code fence (no \`\`\`markdown ... \`\`\`).
+- Use a proper heading hierarchy: start with a single # title, then ## for major sections, ### for subsections.
+- The document must be self-contained — an AI agent reading it should understand the full picture without needing the original brain dump.
+- Include file paths as inline code (\`path/to/file.ts\`) when referencing workspace files.
+- When existing file contents are provided, include relevant excerpts in fenced code blocks with the file path as context.
+- End with a "## Open Questions" or "## TODOs" section if there are unresolved items.
+- Keep it concise but thorough — prefer clarity over brevity.`,
   },
   intent: {
-    systemRole: `You are a workspace organization agent. Analyze the following brain dump and determine which existing files from the workspace need to be READ to make precise edits.
+    systemRole: `You are a workspace organization agent. Analyze the following brain dump and determine which existing files from the workspace need to be READ to provide context for the task.
 
-Only list files that need to be MODIFIED (edited), not files that would be created or appended to.`,
+Only list files whose contents would help an AI agent understand the current codebase state and make informed changes.`,
   },
 };

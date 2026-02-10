@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 
 export interface BrainDumpSettings {
   inputFile: string;
+  outputFile: string;
   postProcess: 'clear' | 'keep' | 'archive';
   ai: {
     backend: 'auto' | 'vscode-lm';
@@ -21,6 +22,7 @@ export function getSettings(): BrainDumpSettings {
 
   return {
     inputFile: config.get<string>('inputFile', 'braindump.txt'),
+    outputFile: config.get<string>('outputFile', 'braindump-context.md'),
     postProcess: config.get<'clear' | 'keep' | 'archive'>('postProcess', 'clear'),
     ai: {
       backend: config.get<'auto' | 'vscode-lm'>('ai.backend', 'auto'),

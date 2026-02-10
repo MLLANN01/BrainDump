@@ -1,8 +1,8 @@
 {
   "name": "braindumpai",
   "displayName": "BrainDump",
-  "description": "AI-powered workspace organization. Dump your thoughts, press a button, and let AI organize them into files and action items.",
-  "version": "0.2.0",
+  "description": "AI-powered context synthesis. Dump your thoughts, press a button, and get a structured Markdown context document ready for any AI agent.",
+  "version": "0.3.0",
   "publisher": "MLLANN01",
   "author": "MLLANN01",
   "license": "ISC",
@@ -20,8 +20,9 @@
   "keywords": [
     "braindump",
     "ai",
-    "organization",
-    "workspace",
+    "context",
+    "markdown",
+    "prompt",
     "copilot"
   ],
   "activationEvents": [],
@@ -35,10 +36,6 @@
           "light": "media/brain-light.svg",
           "dark": "media/brain-dark.svg"
         }
-      },
-      {
-        "command": "braindump.undo",
-        "title": "BrainDump: Undo Last Operation"
       },
       {
         "command": "braindump.selectModel",
@@ -61,6 +58,11 @@
           "type": "string",
           "default": "braindump.txt",
           "description": "Path to the brain dump input file, relative to workspace root"
+        },
+        "braindump.outputFile": {
+          "type": "string",
+          "default": "braindump-context.md",
+          "description": "Path to the generated context document, relative to workspace root"
         },
         "braindump.postProcess": {
           "type": "string",

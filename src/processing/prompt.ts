@@ -55,10 +55,10 @@ Important:
   return sections.join('\n\n');
 }
 
-export function buildPrompt(request: BrainDumpRequest, config: PromptConfig, fileContents?: Map<string, string>): string {
+export function buildContextPrompt(request: BrainDumpRequest, config: PromptConfig, fileContents?: Map<string, string>): string {
   const sections: string[] = [];
 
-  sections.push(config.plan.systemRole);
+  sections.push(config.context.systemRole);
 
   if (request.workspaceContext) {
     sections.push(`## Workspace Context
@@ -74,7 +74,7 @@ ${request.fileTree}`);
     for (const [filePath, content] of fileContents) {
       fileSections.push(`### ${filePath}\n\`\`\`\n${content}\n\`\`\``);
     }
-    sections.push(`## Existing File Contents\nThese are the contents of files relevant to the brain dump. Use them for precise "edit" operations with exact search/replace blocks.\n\n${fileSections.join('\n\n')}`);
+    sections.push(`## Existing File Contents\nThese are the contents of files relevant to the brain dump. Include relevant excerpts in the context document to help the AI agent understand the current state.\n\n${fileSections.join('\n\n')}`);
   }
 
   // Include previous clarification answers if this is a re-process with answers
@@ -83,7 +83,7 @@ ${request.fileTree}`);
       .map((a) => `- **Q (${a.questionId}):** answered "${a.answer}"`)
       .join('\n');
     sections.push(`## Previous Clarification Answers
-The user answered your earlier clarification questions. Incorporate these answers into your plan. Do not ask the same questions again.
+The user answered your earlier clarification questions. Incorporate these answers naturally into the context document.
 
 ${qaPairs}`);
   }
@@ -92,48 +92,17 @@ ${qaPairs}`);
 ${request.rawText}`);
 
   sections.push(`## Instructions
-${config.plan.instructions}`);
+${config.context.instructions}`);
 
-  sections.push(`## Output Format
-Respond with ONLY a JSON object matching this exact schema. No markdown fences, no explanation, just the raw JSON:
-
-{
-  "summary": "One sentence describing what this brain dump contained",
-  "fileOperations": [
-    {
-      "action": "create" | "append" | "edit",
-      "filePath": "path/relative/to/workspace/root",
-      "description": "Human-readable description of this change",
-      "content": "The full file content (create), text to append (append), or replacement text (edit)",
-      "searchBlock": "For edit only: the exact text to find and replace in the file"
-    }
-  ],
-  "actionItems": [
-    {
-      "description": "What needs to be done",
-      "priority": "high" | "medium" | "low",
-      "relatedFiles": ["optional/related/file.ts"],
-      "targetFile": "optional/path/to/project/TODO.md"
-    }
-  ],
-  "suggestions": [
-    {
-      "type": "interpretation" | "recommendation" | "warning",
-      "message": "Description of what was interpreted, recommended, or warned about",
-      "relatedFiles": ["optional/related/file.ts"]
-    }
-  ]
-}
-
-Important:
-${config.plan.outputRules}`);
+  sections.push(`## Output Rules
+${config.context.outputRules}`);
 
   return sections.join('\n\n');
 }
 
 /**
  * Build an intent-pass prompt that asks the AI which existing files it needs to read
- * for precise edits. Used in two-pass processing.
+ * to provide context. Used in two-pass processing.
  */
 export function buildIntentPrompt(request: BrainDumpRequest, config: PromptConfig): string {
   const sections: string[] = [];
@@ -159,7 +128,7 @@ Respond with ONLY a JSON object. No markdown fences, no explanation:
   "reasoning": "Brief explanation of why these files need to be read"
 }
 
-If no existing files need to be edited, return an empty array for filesToRead.`);
+If no existing files need to be read for context, return an empty array for filesToRead.`);
 
   return sections.join('\n\n');
 }
